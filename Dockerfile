@@ -1,22 +1,19 @@
-# Stage 1: Build
-FROM maven:3-openjdk-21 AS build
+# Stage 1: Build (JDK 21 + Maven)
+FROM eclipse-temurin:21 AS build
 WORKDIR /app
 
-# Sao chép toàn bộ mã nguồn vào container
-COPY . .
+# Cài Maven thủ công
+RUN apt-get update && apt-get install -y maven
 
-# Build ứng dụng Spring Boot và tạo file .jar
+# Copy project và build
+COPY . .
 RUN mvn clean package -DskipTests
 
-# Stage 2: Run
-FROM openjdk:21-jdk-slim
+# Stage 2: Run (JDK 21)
+FROM eclipse-temurin:21-jre
 WORKDIR /app
 
-# Sao chép file .jar vào container
 COPY --from=build /app/target/*.jar /app/app.jar
 
-# Mở cổng 8080 để container có thể giao tiếp
 EXPOSE 8080
-
-# Lệnh để chạy ứng dụng Spring Boot
 ENTRYPOINT ["java", "-jar", "/app/app.jar"]
